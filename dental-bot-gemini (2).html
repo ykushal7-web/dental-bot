@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DentAI — Dental Care Assistant</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --teal: #1A7A6E; --teal2: #2A9D8F; --pale: #E8F5F3;
+    --border: #D8E8E6; --dark: #1C2B2A; --muted: #8FA8A5;
+    --cream: #FAF7F2; --gold: #C9A84C;
+  }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    min-height: 100vh; display: flex; align-items: center;
+    justify-content: center; padding: 16px;
+  }
+  .card {
+    width: 100%; max-width: 640px; border-radius: 22px;
+    overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+    background: #fff; display: flex; flex-direction: column;
+  }
+  .header {
+    background: linear-gradient(135deg, var(--dark), var(--teal));
+    padding: 22px 24px; display: flex; align-items: center;
+    gap: 14px; position: relative; overflow: hidden;
+  }
+  .header::after { content:'🦷'; position:absolute; right:20px; top:50%; transform:translateY(-50%); font-size:50px; opacity:0.1; }
+  .h-icon { width:46px; height:46px; background:rgba(255,255,255,0.15); border-radius:13px; display:flex; align-items:center; justify-content:center; font-size:22px; border:1px solid rgba(255,255,255,0.2); flex-shrink:0; }
+  .h-title { color:#fff; font-family:'Playfair Display',serif; font-size:20px; }
+  .h-sub { color:rgba(255,255,255,0.6); font-size:12px; margin-top:3px; }
+  .dot { display:inline-block; width:6px; height:6px; background:#4ade80; border-radius:50%; margin-right:5px; animation:pulse 2s infinite; }
+  .chips-bar { background:var(--pale); border-bottom:1px solid var(--border); padding:11px 14px; }
+  .chips-label { font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); font-weight:600; margin-bottom:8px; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .chip { background:#fff; border:1px solid var(--border); border-radius:20px; padding:5px 12px; font-size:12px; color:var(--teal); cursor:pointer; font-family:'DM Sans',sans-serif; font-weight:500; transition:all 0.15s; }
+  .chip:hover { background:var(--teal); color:#fff; border-color:var(--teal); transform:translateY(-1px); }
+  .chat { height:360px; overflow-y:auto; padding:16px 14px; display:flex; flex-direction:column; gap:11px; scroll-behavior:smooth; }
+  .chat::-webkit-scrollbar { width:4px; }
+  .chat::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+  .msg { display:flex; gap:9px; animation:fadeUp 0.3s ease; }
+  .msg.user { flex-direction:row-reverse; }
+  .av { width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; margin-top:2px; }
+  .av.bot { background:linear-gradient(135deg,var(--teal),var(--teal2)); }
+  .av.user { background:linear-gradient(135deg,var(--gold),#e6c270); }
+  .bubble { max-width:76%; padding:10px 14px; border-radius:14px; font-size:13.5px; line-height:1.65; color:var(--dark); }
+  .msg.bot .bubble { background:var(--pale); border:1px solid var(--border); border-top-left-radius:3px; }
+  .msg.user .bubble { background:linear-gradient(135deg,var(--teal),var(--teal2)); color:#fff; border-top-right-radius:3px; }
+  .typing { display:flex; gap:9px; align-items:center; }
+  .typing-dots { background:var(--pale); border:1px solid var(--border); border-radius:14px; border-top-left-radius:3px; padding:11px 15px; display:flex; gap:5px; align-items:center; }
+  .tdot { width:7px; height:7px; background:var(--muted); border-radius:50%; animation:bounce 1.2s infinite; }
+  .tdot:nth-child(2) { animation-delay:0.2s; }
+  .tdot:nth-child(3) { animation-delay:0.4s; }
+  .input-area { padding:13px 14px; border-top:1px solid var(--border); display:flex; gap:9px; background:var(--cream); }
+  .input-box { flex:1; background:#fff; border:1.5px solid var(--border); border-radius:12px; padding:9px 13px; display:flex; transition:border-color 0.2s; }
+  .input-box:focus-within { border-color:var(--teal2); box-shadow:0 0 0 3px rgba(42,157,143,0.1); }
+  textarea { flex:1; border:none; outline:none; background:transparent; font-family:'DM Sans',sans-serif; font-size:13.5px; color:var(--dark); resize:none; max-height:90px; line-height:1.5; }
+  textarea::placeholder { color:var(--muted); }
+  .send { width:42px; height:42px; border-radius:11px; background:linear-gradient(135deg,var(--teal),var(--teal2)); border:none; color:#fff; font-size:15px; cursor:pointer; flex-shrink:0; transition:all 0.15s; }
+  .send:hover { transform:scale(1.06); box-shadow:0 4px 14px rgba(26,122,110,0.3); }
+  .send:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+  .footer { padding:8px 14px 12px; text-align:center; font-size:11px; color:var(--muted); background:var(--cream); border-top:1px solid var(--border); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-5px)} }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="header">
+    <div class="h-icon">🦷</div>
+    <div>
+      <div class="h-title">DentAI Assistant</div>
+      <div class="h-sub"><span class="dot"></span>Online · Bright Smiles Dental Clinic</div>
+    </div>
+  </div>
+  <div class="chips-bar">
+    <div class="chips-label">Quick Questions</div>
+    <div class="chips">
+      <button class="chip" onclick="sendChip('How do I book an appointment?')">📅 Book Appointment</button>
+      <button class="chip" onclick="sendChip('What are your prices and insurance options?')">💰 Pricing & Insurance</button>
+      <button class="chip" onclick="sendChip('Tell me about teeth whitening')">🦷 Teeth Whitening</button>
+      <button class="chip" onclick="sendChip('I have a toothache, what should I do?')">😬 Toothache Help</button>
+      <button class="chip" onclick="sendChip('What are your opening hours?')">🕐 Opening Hours</button>
+      <button class="chip" onclick="sendChip('What is a root canal procedure?')">🔧 Root Canal</button>
+    </div>
+  </div>
+  <div class="chat" id="chat">
+    <div class="msg bot">
+      <div class="av bot">🦷</div>
+      <div class="bubble">Hello! Welcome to <strong>Bright Smiles Dental Clinic</strong> 🦷<br><br>I'm your dental assistant. I can help with appointments, procedures, pricing, and aftercare.<br><br>How can I help you today? 😊</div>
+    </div>
+  </div>
+  <div class="input-area">
+    <div class="input-box">
+      <textarea id="inp" placeholder="Ask about appointments, procedures, pricing..." rows="1"
+        onkeydown="handleKey(event)" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,90)+'px'"></textarea>
+    </div>
+    <button class="send" id="sendBtn" onclick="sendMessage()">➤</button>
+  </div>
+  <div class="footer">For emergencies, call your clinic directly</div>
+</div>
+
+<script>
+  // ✅ PASTE YOUR GEMINI API KEY HERE
+  const GEMINI_API_KEY = "AIzaSyAKXpPHOAf-UPL0Irta2gxMi7u3Fo3gW3g";
+
+  const SYSTEM_PROMPT = `You are a friendly and professional dental care assistant for "Bright Smiles Dental Clinic".
+
+Clinic details:
+- Hours: Mon–Fri 8am–6pm, Sat 9am–2pm, closed Sunday
+- Phone: (555) 123-4567
+- Address: 123 Main Street
+- Services: General checkups, teeth cleaning, whitening, fillings, root canals, braces, implants, veneers, extractions
+- Pricing: Checkup $80–120, Cleaning $100–150, Whitening $300–500, Filling $150–300, Root Canal $700–1500, Implant $1500–3000
+- Insurance: Accepts most major dental insurance plans
+- Booking: By phone or online at brightsmiles.com
+
+Your personality:
+- Warm, reassuring, and professional
+- Keep answers concise (2–4 sentences)
+- Respond in the same language the patient uses (Hindi, English, etc.)
+- Never diagnose — always recommend seeing a dentist
+- Use occasional emojis to stay friendly 😊`;
+
+  let history = [];
+  let busy = false;
+
+  function scrollDown() {
+    const c = document.getElementById('chat');
+    c.scrollTop = c.scrollHeight;
+  }
+
+  function addMsg(role, text) {
+    const c = document.getElementById('chat');
+    const d = document.createElement('div');
+    d.className = `msg ${role}`;
+    d.innerHTML = `
+      <div class="av ${role}">${role === 'bot' ? '🦷' : '👤'}</div>
+      <div class="bubble">${text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</div>`;
+    c.appendChild(d);
+    scrollDown();
+  }
+
+  function showTyping() {
+    const c = document.getElementById('chat');
+    const d = document.createElement('div');
+    d.className = 'typing'; d.id = 'typing';
+    d.innerHTML = `<div class="av bot">🦷</div><div class="typing-dots"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div>`;
+    c.appendChild(d);
+    scrollDown();
+  }
+
+  function hideTyping() {
+    const el = document.getElementById('typing');
+    if (el) el.remove();
+  }
+
+  function handleKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  }
+
+  function sendChip(text) {
+    document.getElementById('inp').value = text;
+    sendMessage();
+  }
+
+  async function sendMessage() {
+    const inp = document.getElementById('inp');
+    const text = inp.value.trim();
+    if (!text || busy) return;
+
+    inp.value = '';
+    inp.style.height = 'auto';
+    busy = true;
+    document.getElementById('sendBtn').disabled = true;
+
+    addMsg('user', text);
+    history.push({ role: 'user', parts: [{ text }] });
+    showTyping();
+
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+            contents: history
+          })
+        }
+      );
+
+      const data = await res.json();
+      hideTyping();
+
+      if (data.error) {
+        addMsg('bot', `Error: ${data.error.message} — Please check your API key.`);
+      } else {
+        const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, please try again.';
+        history.push({ role: 'model', parts: [{ text: reply }] });
+        addMsg('bot', reply);
+      }
+
+    } catch (err) {
+      hideTyping();
+      addMsg('bot', 'Connection error. Please check your internet and try again 📞');
+    }
+
+    busy = false;
+    document.getElementById('sendBtn').disabled = false;
+    inp.focus();
+  }
+</script>
+</body>
+</html>
